@@ -1,4 +1,4 @@
-const port = 4000;
+const port = process.env.PORT || 4000;
 const express = require("express");
 const app = express()
 const mongoose = require("mongoose");
@@ -16,6 +16,8 @@ mongoose.connect("mongodb+srv://dayksontavares90:Godislovedt123@cluster0.7ae7zlt
 app.get("/",(req,res) =>{
     res.send("Express App is Running")
 })
+
+
 
 const storage = multer.diskStorage({
 
