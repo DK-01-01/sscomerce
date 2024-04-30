@@ -1,9 +1,13 @@
 import React, { useContext } from 'react';
+import { Link } from 'react-router-dom';
 import './CartItems.css';
 import { ShoesContext } from '../../context/ShoesContext';
 import remove_icon from '../assets/cart_cross_icon.png';
 
+
+
 const CartItems = () => {
+  
     const {getTotalCartAmount, all_product, cartItems, removeFromCart} = useContext(ShoesContext);
 
   return (
@@ -54,7 +58,7 @@ const CartItems = () => {
                <h3>${getTotalCartAmount()}</h3>
              </div>
           </div>
-             <button>PROSEED TO CHECKOUT</button>
+             <Link to='/paymentpage'><button>PROSEED TO CHECKOUT</button></Link>
           </div>
           <div className="cartitems-promocode">
             <p>If you have a promo code, Enter it here</p>

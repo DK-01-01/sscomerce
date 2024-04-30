@@ -1,22 +1,29 @@
-const port = process.env.PORT || 4000;
+const port = 4000;
 const express = require("express");
 const app = express()
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
+const bodyParser = require("body-parser");
 const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
+const Transaction = require("./models/Transaction")
+const stripe = require("stripe")("sk_test_51P9pRjEUof4WzX0eUWdHekJ44W7AewmLUdZHcuVe2HcMllb8cKRsRKcmBCRQIzZeGClVAH5DzU3SZfG0kpJQe6ta00XYVTEWhv");
 const { log } = require("console");
 
 app.use(express.json());
+app.use(express.static("public"));
 app.use(cors());
 
-mongoose.connect("mongodb+srv://dayksontavares90:Godislovedt123@cluster0.7ae7zlt.mongodb.net/")
+
+
+mongoose.connect("mongodb+srv://dayksontavares90:ly25wCo4HFRcqvcX@cluster0.7ae7zlt.mongodb.net/", {
+    serverSelectionTimeoutMS: 30000,
+})
 
 app.get("/",(req,res) =>{
     res.send("Express App is Running")
 })
-
 
 
 const storage = multer.diskStorage({
@@ -167,27 +174,29 @@ app.post('/signup',async(req,res)=>{
     res.json({success:true,token})
 })
 
-app.post('/login',async(req,res)=>{
-    let user = await Users.findOne({email:req.body.email});
-    if(user) {
-        const passCompare = req.body.password === user.password;
-        if(passCompare) {
-        const data = {
-            user: {
-                id:user.id
+
+app.post('/login', async (req, res) => {
+    setTimeout(async () => {
+        let user = await Users.findOne({ email: req.body.email });
+        if (user) {
+            const passCompare = req.body.password === user.password;
+            if (passCompare) {
+                const data = {
+                    user: {
+                        id: user.id
+                    }
+                }
+                const token = jwt.sign(data, 'secret_ecom');
+                res.json({ success: true, token });
+            } else {
+                res.json({ success: false, errors: "Senha incorreta" });
             }
+        } else {
+            res.json({ success: false, errors: "E-mail incorreto" });
         }
-        const token = jwt.sign(data,'secret_ecom');
-        res.json({success:true,token})
-    }
-    else {
-        res.json({success:false,errors:"wrong password"})
-    }
-  }
-  else {
-    res.json({success:false,errors:"wrong email id"})
-  }
-})
+    }, 3000);
+});
+
 
 app.get('/popular', async(req,res) => {
     let products = await Product.find({category:"men"});
@@ -236,6 +245,71 @@ app.post('/getcart', fetchUser, async (req,res) => {
     res.json(userData.cartData);
 })
 
+app.post("/create-checkout-session", async (req, res) => {
+    try {
+        const { name, amount } = req.body;
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: [
+                {
+                    price_data: {
+                        currency: "usd",
+                        product_data: {
+                            name: "Product Name"
+                        },
+                        unit_amount: amount
+                    },
+                    quantity: 1
+                }
+            ],
+            mode: "payment",
+            success_url: `http://localhost:4000/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: "http://localhost:4000/cancel"
+        });
+
+        res.json({ url: session.url });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get("/success", async (req, res) => {
+    const session_id = req.query.session_id;
+
+    try {
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+
+        if (session.payment_status === "paid") {
+            const name = session.metadata.name;
+            const amount = session.amount_total / 100; // Converting amount from cents to dollars
+
+            const newTransaction = new Transaction({ name, amount, transactionID: session_id });
+            await newTransaction.save();
+
+            res.status(200).json({ message: "Transaction saved successfully" });
+        } else {
+            res.status(400).send("Payment Unsuccessful");
+        }
+    } catch (error) {
+        res.status(500).send("Payment Confirmation Error");
+    }
+});
+
+app.get("/cancel", (req, res) => {
+    res.send("Payment Canceled");
+});
+
+app.post("/save-transaction", async (req, res) => {
+    try {
+        const { name, amount, transactionID } = req.body;
+        const newTransaction = new Transaction({ name, amount, transactionID });
+        await newTransaction.save();
+
+        res.status(200).send("Transaction saved successfully");
+    } catch (error) {
+        res.status(500).send("Error saving transaction");
+    }
+});
 
 
 app.listen(port,(error) => {

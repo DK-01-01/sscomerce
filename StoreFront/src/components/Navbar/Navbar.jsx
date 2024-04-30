@@ -1,5 +1,7 @@
 import React, { useState, useRef, useContext } from 'react';
 import { Link } from 'react-router-dom';
+
+
 import './Navbar.css';
 import { ShoesContext } from '../../context/ShoesContext'
 import nav_dropdown from '../assets/interface.png';

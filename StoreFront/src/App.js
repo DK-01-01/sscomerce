@@ -8,6 +8,7 @@ import banner from './components/assets/banner.png';
 import ShoesCategory from './pages/ShoesCategory';
 import LoginSignUp from './pages/LoginSignUp';
 import Cart from './pages/Cart'
+import PaymentPage from './pages/PaymentPage';
 
 
 function App() {
@@ -23,8 +24,9 @@ function App() {
           <Route path="/product" element={<Product/>}>
             <Route path=':productId' element={<Product/>}/>
           </Route>
-          <Route path='cart' element={<Cart/>} />
+          <Route path='/cart' element={<Cart/>} />
           <Route path='/login' element={<LoginSignUp />} />
+          <Route path='/paymentpage' element={<PaymentPage />} />
         </Routes>
         <Footer />
       </BrowserRouter>

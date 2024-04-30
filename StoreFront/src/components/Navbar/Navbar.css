@@ -7,6 +7,12 @@
     box-shadow: 0 1px 3px -2px blue;
 }
 
+.navbar .sts {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
 .nav-dropdown {
     display: none;
 }
